@@ -6,24 +6,27 @@
 #define DATABASELABSE_SCHEME_H
 
 #include <string>
-#include <vector>
-#include <unordered_map>
+#include <sstream>
+#include <ostream>
 
-typedef std::unordered_map<std::string, int> Columns;
-typedef std::vector<char> Bytes;
-
-const Columns student {{"name", 20}, {"surname", 20}, {"patronymic", 20}};
-const Columns variant {{"path", 40}};
-
-class Student {
+class Student{
+public:
     int id;
     std::string name, surname, patronymic;
+
+    explicit Student(const std::string& s);
+
+    friend std::ostream &operator<<(std::ostream &os, const Student &s);
 };
 
-class Variant {
+class Variant{
+public:
     int id;
     std::string path;
-};
 
+    explicit Variant(const std::string &s);
+
+    friend std::ostream &operator<<(std::ostream &os, const Variant &v);
+};
 
 #endif //DATABASELABSE_SCHEME_H
