@@ -5,19 +5,17 @@
 #include "scheme.h"
 
 
-Student::Student(const std::string &s) {
-    std::stringstream ss(s);
-    ss >> id >> surname >> name >> patronymic;
-}
-
-Variant::Variant(const std::string &s) {
-    std::stringstream ss(s);
-    ss >> id >> path;
-}
-
 std::ostream &operator<<(std::ostream &os, const Student &s) {
     os << s.id << " " << s.name << " " << s.surname << " " << s.patronymic;
     return os;
+}
+
+Student::Student(const std::string &s, bool withId) {
+    std::stringstream ss(s);
+    id = -1;
+    if (withId)
+        ss >> id;
+    ss >> surname >> name >> patronymic;
 }
 
 std::ostream &operator<<(std::ostream &os, const Variant &v) {
@@ -25,3 +23,26 @@ std::ostream &operator<<(std::ostream &os, const Variant &v) {
     return os;
 }
 
+Variant::Variant(const std::string &s, bool withId) {
+    std::stringstream ss(s);
+    id = -1;
+    if (withId)
+        ss >> id;
+    ss >> path;
+}
+
+std::ostream &operator<<(std::ostream &os, const Distribution &d) {
+    os << d.id << " " << d.var;
+    return os;
+}
+
+Distribution::Distribution(const std::string &s, bool withId) {
+    std::stringstream ss(s);
+    id = var = -1;
+    ss >> id >> var;
+}
+
+Distribution::Distribution(int studId, int varId) {
+    id = studId;
+    var = varId;
+}

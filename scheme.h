@@ -13,8 +13,7 @@ class Student{
 public:
     int id;
     std::string name, surname, patronymic;
-
-    explicit Student(const std::string& s);
+    Student(const std::string &s, bool withId);
 
     friend std::ostream &operator<<(std::ostream &os, const Student &s);
 };
@@ -24,9 +23,18 @@ public:
     int id;
     std::string path;
 
-    explicit Variant(const std::string &s);
+    Variant(const std::string &s, bool withId);
 
     friend std::ostream &operator<<(std::ostream &os, const Variant &v);
+};
+
+class Distribution {
+public:
+    int id, var;
+    Distribution(const std::string &s, bool withId);
+    Distribution(int studId, int varId);
+
+    friend std::ostream &operator<<(std::ostream &os, const Distribution &d);
 };
 
 #endif //DATABASELABSE_SCHEME_H
