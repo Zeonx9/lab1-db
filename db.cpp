@@ -16,34 +16,39 @@ int DataBase::find(const std::string &name) {
 
 void DataBase::create(const std::string &rootFolder) {
     root = rootFolder;
+//    std::filesystem::create_directories(root);
 }
 
+// creates a table and binds it to db object
 void DataBase::generate(const std::string &name, DataBase::Type type, const std::string &src) {
     if (find(name) != -1) {
         std::cout << "such table already exists\n";
         return;
     }
 
+    // bind table to db
     auto path = root + name + ".txt";
     names.emplace_back(name, type);
+
+    // create table and put it in the right place
+    // saves created table to file
     switch (type) {
-        case Type::student : {
+        case Type::student :
             if (!src.empty() and studs.size() == 0)
                 studs.createFrom(src);
             studs.save(path);
-        }
             break;
-        case Type::variant : {
+        case Type::variant :
+            if (!src.empty() and vars.size() == 0)
+                vars.createFrom(src);
             vars.save(path);
-        }
             break;
-        case Type::distribution : {
+        case Type::distribution :
             if (studs.size() > 0 and vars.size() > 0)
                 distribute(dstr, studs, vars);
             else
                 std::cout << "No accesible student or variant information to make distribution\n";
             dstr.save(path);
-        }
     }
 }
 
@@ -54,6 +59,7 @@ void DataBase::print(const std::string &name, std::ostream &os, bool toRead) {
         return;
     }
 
+    // check for printing distribution to read it
     if (names[ind].second == Type::distribution and toRead) {
         for (auto row = dstr.getTable().begin() + 1; row < dstr.getTable().end(); ++row) {
             Student s = studs.getTable()[row->id];
@@ -61,23 +67,22 @@ void DataBase::print(const std::string &name, std::ostream &os, bool toRead) {
         }
         return;
     }
+
+    // print a table
     switch (names[ind].second) {
         case Type::student : {
-            for (int i = 1; i < studs.size(); ++i) {
-                os << studs.getTable()[i] << "\n";
-            }
+            for (auto &t : studs.getTable())
+                os << t << "\n";
             break;
         }
         case Type::variant : {
-            for (int i = 1; i < studs.size(); ++i) {
-                os << vars.getTable()[i] << "\n";
-            }
+            for (auto &t : vars.getTable())
+                os << t << "\n";
             break;
         }
         case Type::distribution : {
-            for (int i = 1; i < studs.size(); ++i) {
-                os << dstr.getTable()[i] << "\n";
-            }
+            for (auto &t : dstr.getTable())
+                os << t << "\n";
         }
     }
 }
@@ -85,10 +90,14 @@ void DataBase::print(const std::string &name, std::ostream &os, bool toRead) {
 void DataBase::close() {
     std::ofstream file;
     file.open(root + db_saved_data);
+
+    // write number of tables
     file << names.size() << "\n";
     for (auto &p: names){
         file << p.first << " " << (int) p.second << "\n";
         auto path = root + p.first + ".txt";
+
+        // save all opened tables
         switch (p.second) {
             case Type::student:
                 studs.save(path);
@@ -116,11 +125,14 @@ void DataBase::open(const std::string &rootFolder) {
 
     int n;
     file >> n;
+
     for (int i = 0; i < n; ++i) {
         std::string s;
         int t;
         file >> s >> t;
+        // bind table to
         names.emplace_back(s, (Type) t);
+
         auto path = root + s + ".txt";
         switch ((Type) t) {
             case Type::student:

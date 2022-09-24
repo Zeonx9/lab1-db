@@ -10,15 +10,6 @@
 #include <vector>
 #include <random>
 
-namespace FileNames {
-    const std::string
-            students = "../data/students.txt",
-            variants = "../data/variants.txt",
-            test = "../data/test.txt",
-            names = "../data/names.txt",
-            distributed = "../data/dist.txt";
-}
-
 template<typename T>
 class Table {
 private:
@@ -34,8 +25,7 @@ public:
     void open(const std::string& path);
     void save(const std::string &path);
 
-    void addNoAutoIncrement(T item);
-    void add(T item);
+    void add(T item, bool autoInc);
     void remove(int key);
     void update(int key, T&item);
 };

@@ -7,6 +7,7 @@
 
 #include "table.h"
 
+// main db class
 class DataBase {
 public:
     enum class Type{student, variant, distribution};

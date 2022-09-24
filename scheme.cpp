@@ -20,7 +20,7 @@ std::ostream &operator<<(std::ostream &os, const Distribution &d) {
     return os;
 }
 
-Student::Student(const std::string &s, bool withId) : Entry() {
+Student::Student(const std::string &s, bool withId) {
     std::stringstream ss(s);
     id = -1;
     if (withId)
@@ -28,7 +28,7 @@ Student::Student(const std::string &s, bool withId) : Entry() {
     ss >> surname >> name >> patronymic;
 }
 
-Variant::Variant(const std::string &s, bool withId) : Entry() {
+Variant::Variant(const std::string &s, bool withId) {
     std::stringstream ss(s);
     id = -1;
     if (withId)
@@ -36,13 +36,13 @@ Variant::Variant(const std::string &s, bool withId) : Entry() {
     ss >> path;
 }
 
-Distribution::Distribution(const std::string &s, bool withId) : Entry() {
+Distribution::Distribution(const std::string &s, bool withId) {
     std::stringstream ss(s);
     id = var = -1;
     ss >> id >> var;
 }
 
-Distribution::Distribution(int studId, int varId) : Entry() {
+Distribution::Distribution(int studId, int varId) {
     id = studId;
     var = varId;
 }
