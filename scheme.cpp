@@ -1,44 +1,44 @@
 //
 // Created by musht on 21.09.2022.
 //
-
+#include <sstream>
 #include "scheme.h"
 
 // insertion operators
-std::ostream &operator<<(std::ostream &os, const Student &s) {
+ost &operator<<(ost &os, const Student &s) {
     os << s.id << " " << s.name << " " << s.surname << " " << s.patronymic;
     return os;
 }
 
-std::ostream &operator<<(std::ostream &os, const Variant &v) {
+ost &operator<<(ost &os, const Variant &v) {
     os << v.id << " " << v.path;
     return os;
 }
 
-std::ostream &operator<<(std::ostream &os, const Distribution &d) {
+ost &operator<<(ost &os, const Distribution &d) {
     os << d.id << " " << d.var;
     return os;
 }
 
-Student::Student(const std::string &s, bool withId) {
-    std::stringstream ss(s);
+Student::Student(const str &s, bool withId) {
     id = -1;
+    sst ss(s);
     if (withId)
         ss >> id;
     ss >> surname >> name >> patronymic;
 }
 
-Variant::Variant(const std::string &s, bool withId) {
-    std::stringstream ss(s);
+Variant::Variant(const str&s, bool withId) {
     id = -1;
+    sst ss(s);
     if (withId)
         ss >> id;
     ss >> path;
 }
 
-Distribution::Distribution(const std::string &s, bool withId) {
-    std::stringstream ss(s);
+Distribution::Distribution(const str&s, bool withId) {
     id = var = -1;
+    sst ss(s);
     ss >> id >> var;
 }
 
