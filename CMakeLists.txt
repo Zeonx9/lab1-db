@@ -3,4 +3,4 @@ project(DataBaseLabse)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(DataBaseLabse main.cpp database.cpp database.h scheme.cpp scheme.h)
+add_executable(DataBaseLabse a_main.cpp table.cpp table.h scheme.cpp scheme.h db.cpp db.h)
