@@ -9,31 +9,30 @@
 #include <sstream>
 #include <ostream>
 
-class Student{
+class Entry {
 public:
     int id;
-    std::string name, surname, patronymic;
-    Student(const std::string &s, bool withId);
-
-    friend std::ostream &operator<<(std::ostream &os, const Student &s);
 };
 
-class Variant{
+class Student : public Entry{
 public:
-    int id;
+    std::string name, surname, patronymic;
+    Student(const std::string &s, bool withId);
+    friend std::ostream &operator<<(std::ostream &os, const Student &v);
+};
+
+class Variant : public Entry{
+public:
     std::string path;
-
     Variant(const std::string &s, bool withId);
-
     friend std::ostream &operator<<(std::ostream &os, const Variant &v);
 };
 
-class Distribution {
+class Distribution : public Entry{
 public:
-    int id, var;
+    int var;
     Distribution(const std::string &s, bool withId);
     Distribution(int studId, int varId);
-
     friend std::ostream &operator<<(std::ostream &os, const Distribution &d);
 };
 
