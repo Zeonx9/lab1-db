@@ -2,8 +2,8 @@
 // Created by musht on 21.09.2022.
 //
 
-#ifndef DATABASELABSE_DATABASE_H
-#define DATABASELABSE_DATABASE_H
+#ifndef DATABASELABSE_TABLE_H
+#define DATABASELABSE_TABLE_H
 
 #include "scheme.h"
 #include <fstream>
@@ -42,5 +42,4 @@ public:
 
 void distribute(Table<Distribution> &tab, const Table<Student> &studs, const Table<Variant> &vars);
 
-
-#endif //DATABASELABSE_DATABASE_H
+#endif //DATABASELABSE_TABLE_H

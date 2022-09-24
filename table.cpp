@@ -3,7 +3,7 @@
 //
 
 #include <iostream>
-#include "database.h"
+#include "table.h"
 
 // instantiations
 template class Table<Student>;
