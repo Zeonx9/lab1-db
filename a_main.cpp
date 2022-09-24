@@ -4,20 +4,18 @@
 #ifdef db_test
 #include "db.h"
 #include <iostream>
-#include <fstream>
+#include <windows.h>
 
 int main() {
-   DataBase db;
-   //db.create("../data_test/");
-   db.open("../data_test/");
+    SetConsoleOutputCP(CP_UTF8);
+    DataBase db;
+    //db.create("../data_test/");
+    db.open("../data_test/");
 
     db.print("students", std::cout);
-    std::cout << "\n\n\n";
-    db.print("variants", std::cout);
-    std::cout << "\n\n\n";
-
-    db.generate("distrib", DataBase::Type::distribution);
-    db.print("distrib", std::cout, true);
+    std::cout << "\n";
+    //db.generate("distrib", DataBase::Type::distribution);
+    db.print("distrib", std::cout);
 
 //    db.generate("students", DataBase::Type::student, "../data/names.txt");
 //    db.generate("variants", DataBase::Type::variant, "../data/vars.txt");
