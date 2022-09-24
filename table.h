@@ -5,10 +5,11 @@
 #ifndef DATABASELABSE_TABLE_H
 #define DATABASELABSE_TABLE_H
 
-#include "scheme.h"
-#include <fstream>
 #include <vector>
-#include <random>
+#include "scheme.h"
+
+using ifst = std::ifstream;
+using ofst = std::ofstream;
 
 template<typename T>
 class Table {
@@ -19,17 +20,20 @@ private:
 public:
     int size() const;
     const std::vector<T> &getTable() const;
-    void setNextId(int nextId);
+    T &operator[] (unsigned int index);
 
-    void createFrom(const std::string& src);
-    void open(const std::string& path);
-    void save(const std::string &path);
+    void createFrom(const str& src);
+    void open(const str& path);
+    void save(const str &path);
 
-    void add(T item, bool autoInc);
+    void add(T item, bool autoInc=false);
     void remove(int key);
     void update(int key, T&item);
+
 };
 
-void distribute(Table<Distribution> &tab, const Table<Student> &studs, const Table<Variant> &vars);
+void distribute(Table<Distribution> &tab,
+                Table<Student> &studs,
+                Table<Variant> &vars);
 
 #endif //DATABASELABSE_TABLE_H

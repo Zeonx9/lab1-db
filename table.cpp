@@ -3,6 +3,9 @@
 //
 
 #include <iostream>
+#include <fstream>
+#include <sstream>
+#include <random>
 #include "table.h"
 
 // instantiations
@@ -16,25 +19,25 @@ const std::vector<T> &Table<T>::getTable() const {
     return table;
 }
 
-template<typename T>
-void Table<T>::setNextId(int s) {
-    nextId = s;
-}
-
 // property
 template<typename T>
 int Table<T>::size() const {
     return table.size();
 }
 
+// operator
+template<typename T>
+T &Table<T>::operator[](unsigned int index) {
+    return table[index];
+}
+
 // initialization
 template<typename T>
-void Table<T>::createFrom(const std::string &src) {
-    std::ifstream file;
-    file.open(src);
+void Table<T>::createFrom(const str &src) {
+    ifst file(src);
     nextId = 0;
 
-    std::string line;
+    str line;
     while (getline(file, line)) {
         // create the Entry and put it in the table
         add(T(line, false), true);
@@ -42,14 +45,12 @@ void Table<T>::createFrom(const std::string &src) {
 }
 
 template<typename T>
-void Table<T>::open(const std::string &path) {
-    std::ifstream file;
-    file.open(path);
-
+void Table<T>::open(const str &path) {
+    ifst file(path);
     // get the first line and take the nextId number
-    std::string line;
+    str line;
     std::getline(file, line);
-    std::stringstream ss(line);
+    sst ss(line);
     ss >> nextId;
 
     // scan entries
@@ -61,18 +62,18 @@ void Table<T>::open(const std::string &path) {
 
 // close
 template<typename T>
-void Table<T>::save(const std::string &path) {
-    std::ofstream file;
+void Table<T>::save(const str &path) {
+    ofst file(path);
     // file should be truncated before writing
     // first line in the file is the ID which should the next added element has
     // then line by line is entries of the table
-    file.open(path, std::ios::trunc);
     file << nextId << "\n";
-    for (auto &entry: table) {
+    for (auto &entry : table) {
         file << entry << "\n";
     }
     file.close();
 }
+
 
 // CRUD operations
 template<typename T>
@@ -105,8 +106,11 @@ void Table<T>::update(int key, T &item) {
     }
 }
 
+
 // fills the distribution table
-void distribute(Table<Distribution> &tab, const Table<Student> &studs, const Table<Variant> &vars) {
+void distribute(Table<Distribution> &tab,
+                Table<Student> &studs,
+                Table<Variant> &vars) {
     // create a distribution engine
     std::random_device rd;
     std::mt19937 rng(rd());
@@ -114,9 +118,7 @@ void distribute(Table<Distribution> &tab, const Table<Student> &studs, const Tab
 
     // for each student give the variant randomly
     for (auto &stud: studs.getTable()) {
-        int rv = vars.getTable()[dstr(rng)].id;
         // std::cout << "student id:" << it->id << " var id:" << rv << "\n";
-        Distribution d(stud.id, rv);
-        tab.add(d, false); // without changing the id
+        tab.add(Distribution(stud.id, vars[dstr(rng)].id)); // without changing the id
     }
 }
