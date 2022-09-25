@@ -20,20 +20,20 @@ private:
 public:
     int size() const;
     const std::vector<T> &getTable() const;
-    T &operator[] (unsigned int index);
+    T &operator[](unsigned int index);
 
     void createFrom(const str& src);
     void open(const str& path);
     void save(const str &path);
 
+    T &find(int key, bool &err);
     void add(T item, bool autoInc=false);
     void remove(int key);
-    void update(int key, T&item);
+    void update(int key, T item);
+
+    void clear();
 
 };
 
-void distribute(Table<Distribution> &tab,
-                Table<Student> &studs,
-                Table<Variant> &vars);
 
 #endif //DATABASELABSE_TABLE_H

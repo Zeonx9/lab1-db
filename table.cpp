@@ -5,7 +5,6 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <random>
 #include "table.h"
 
 // instantiations
@@ -74,6 +73,16 @@ void Table<T>::save(const str &path) {
     file.close();
 }
 
+template<typename T>
+T &Table<T>::find(int key, bool &err) {
+    err = false;
+    for (auto &e : table) {
+        if (e.id == key)
+            return e;
+    }
+    err = true;
+    return table[0]; // might cause problems when table is empty
+}
 
 // CRUD operations
 template<typename T>
@@ -96,29 +105,20 @@ void Table<T>::remove(int key) {
 }
 
 template<typename T>
-void Table<T>::update(int key, T &item) {
-    item.id = key;
+void Table<T>::update(int key, T item) {
     for (int i = 0; i < table.size(); ++i) {
         if (table[i].id == key) {
+            item.id = key;
             table[i] = item;
             return;
         }
     }
 }
 
+template<typename T>
+void Table<T>::clear() {
+    table.clear();
+}
+
 
 // fills the distribution table
-void distribute(Table<Distribution> &tab,
-                Table<Student> &studs,
-                Table<Variant> &vars) {
-    // create a distribution engine
-    std::random_device rd;
-    std::mt19937 rng(rd());
-    std::uniform_int_distribution<std::mt19937::result_type> dstr(1, vars.size());
-
-    // for each student give the variant randomly
-    for (auto &stud: studs.getTable()) {
-        // std::cout << "student id:" << it->id << " var id:" << rv << "\n";
-        tab.add(Distribution(stud.id, vars[dstr(rng)].id)); // without changing the id
-    }
-}
