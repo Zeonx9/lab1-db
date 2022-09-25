@@ -4,6 +4,8 @@
 
 #include <iostream>
 #include <fstream>
+#include <random>
+#include <filesystem>
 #include "db.h"
 
 int DataBase::find(const str &name) {
@@ -17,7 +19,7 @@ int DataBase::find(const str &name) {
 
 void DataBase::create(const str &rootFolder) {
     root = rootFolder;
-//    std::filesystem::create_directories(root);
+    std::filesystem::create_directories(root);
 }
 
 void DataBase::open(const str &rootFolder) {
@@ -29,7 +31,7 @@ void DataBase::open(const str &rootFolder) {
         return;
     }
     int n;
-    file >> n;
+    file >> n >> modified;
 
     for (int i = 0; i < n; ++i) {
         str s; int t;
@@ -56,7 +58,7 @@ void DataBase::close() {
     ofst file(root + db_saved_data);
 
     // write number of tables
-    file << names.size() << "\n";
+    file << names.size() << " " << modified << "\n";
     for (auto &p: names){
         file << p.first << " " << (int) p.second << "\n";
         auto path = root + p.first + ".txt";
@@ -105,13 +107,61 @@ void DataBase::generate(const str &name, DataBase::Type type, const str &src) {
             break;
         case Type::distribution :
             if (studs.size() > 0 and vars.size() > 0) {
-                distribute(dstr, studs, vars);
-            } else {
-                std::cerr << "No accessible student or variant information to make distribution\n";
+                distribute();
+                dstr.save(path);
             }
-            dstr.save(path);
+            else
+                std::cerr << "No accessible student or variant information to make distribution\n";
     }
 }
+
+void DataBase::regenerate(const str &name, Type type, const str &src="") {
+    del(name);
+    generate(name, type, src);
+}
+
+void DataBase::distribute() {
+    // create a distribution engine
+    std::random_device rd;
+    std::mt19937 rng(rd());
+    std::uniform_int_distribution<std::mt19937::result_type> rnd(1, vars.size());
+
+    // for each student give the variant randomly
+    for (auto &stud: studs.getTable()) {
+        // std::cout << "student id:" << it->id << " var id:" << rv << "\n";
+        dstr.add(Distribution(stud.id, vars[rnd(rng)].id)); // without changing the id
+    }
+    modified = false;
+}
+
+void DataBase::del(const str &table) {
+    auto ind = find(table);
+    if (ind == -1) {
+        std::cerr << "No such table to delete";
+        return;
+    }
+
+    std::filesystem::remove(root + names[ind].first + ".txt");
+
+    switch (names[ind].second) {
+        case Type::student:
+            studs.clear();
+            break;
+        case Type::variant:
+            vars.clear();
+            break;
+        case Type::distribution:
+            dstr.clear();
+    }
+
+    names.erase(names.begin() + ind);
+}
+
+void DataBase::distToReadStr(const Distribution &d, ost &os) {
+    auto &s = studs[d.id];
+    os << s.surname <<  " " + s.name << " " << s.patronymic << "\t\t" <<  vars[d.var].path << "\n";
+}
+
 
 void DataBase::print(const str &name, ost &os, bool toRead)  {
     auto ind = find(name);
@@ -122,9 +172,12 @@ void DataBase::print(const str &name, ost &os, bool toRead)  {
 
     // check for printing distribution to read it
     if (names[ind].second == Type::distribution and toRead) {
+        if (modified) {
+            std::cerr << "tables were modified, \"" << names[ind].first << "\" should be regenerated\n";
+            return;
+        }
         for (auto &row : dstr.getTable()) {
-            auto &s = studs[row.id];
-            os << s.surname << " " << s.name << " " << s.patronymic << "\t\t" << vars[row.var].path << "\n";
+            distToReadStr(row, os);
         }
         return;
     }
@@ -147,4 +200,104 @@ void DataBase::print(const str &name, ost &os, bool toRead)  {
         }
     }
 }
+
+void DataBase::add(const str &table, const str &line) {
+    auto ind = find(table);
+    if (ind == -1) {
+        std::cerr << "add() failed, table not found\n";
+        return;
+    }
+    switch (names[ind].second) {
+        case Type::student:
+            studs.add(Student(line, false), true);
+            break;
+        case Type::variant:
+            vars.add(Variant(line, false), true);
+            break;
+        case Type::distribution:
+            std::cerr << "add() not allowed for \"" << names[ind].first << "\"\n";
+    }
+}
+
+void DataBase::remove(const str &table, int key) {
+    auto ind = find(table);
+    if (ind == -1) {
+        std::cerr << "remove() failed, table not found\n";
+        return;
+    }
+    modified = true;
+    switch (names[ind].second) {
+        case Type::student:
+            studs.remove(key);
+            break;
+        case Type::variant:
+            vars.remove(key);
+            break;
+        case Type::distribution:
+            std::cerr << "remove() not allowed for \"" << names[ind].first << "\"\n";
+    }
+}
+
+void DataBase::update(const str &table, int key, const str &line) {
+    auto ind = find(table);
+    if (ind == -1) {
+        std::cerr << "update() failed, table not found\n";
+        return;
+    }
+    modified = true;
+    switch (names[ind].second) {
+        case Type::student:
+            studs.update(key, Student(line, false));
+            break;
+        case Type::variant:
+            vars.update(key, Variant(line, false));
+            break;
+        case Type::distribution:
+            std::cerr << "upadate() not allowed for \"" << names[ind].first << "\"\n";
+    }
+}
+
+void DataBase::printLine(const str &table, int key, ost& os, bool toRead) {
+    auto ind = find(table);
+    if (ind == -1) {
+        std::cerr << "update() failed, table not found\n";
+        return;
+    }
+    bool notFound;
+    switch (names[ind].second) {
+        case Type::student: {
+            auto &s = studs.find(key, notFound);
+            if (notFound) {
+                std::cerr << "key not found\n";
+                return;
+            }
+                os << s;
+            break;
+        } case Type::variant: {
+            auto &v = vars.find(key, notFound);
+            if (notFound) {
+                std::cerr << "key not found\n";
+                return;
+            }
+            os << v;
+            break;
+        } case Type::distribution: {
+            auto &d = dstr.find(key, notFound);
+            if (notFound) {
+                std::cerr << "key not found\n";
+                return;
+            }
+            if (toRead) {
+                if (modified) {
+                    std::cerr << "tables were modified, \"" << names[ind].first << "\" should be regenerated\n";
+                    return;
+                }
+                distToReadStr(d, os);
+            }
+            else
+                os << d;
+        }
+    }
+}
+
 
