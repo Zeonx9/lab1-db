@@ -27,6 +27,7 @@ public:
     void save(const str &path);
 
     T &find(int key, bool &err);
+    bool findByStr(const str &line);
     void add(T item, bool autoInc=false);
     void remove(int key);
     void update(int key, T item);

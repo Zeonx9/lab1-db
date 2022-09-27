@@ -87,6 +87,10 @@ T &Table<T>::find(int key, bool &err) {
 // CRUD operations
 template<typename T>
 void Table<T>::add(T item, bool autoInc) {
+    if (findByStr(item.toString())) {
+        std::cerr << "cannot add, such item exists already\n";
+        return;
+    }
     if (autoInc) {
         item.id = nextId;
         ++nextId;
@@ -106,6 +110,10 @@ void Table<T>::remove(int key) {
 
 template<typename T>
 void Table<T>::update(int key, T item) {
+    if (findByStr(item.toString())) {
+        std::cerr << "cannot update, such item exists already\n";
+        return;
+    }
     for (int i = 0; i < table.size(); ++i) {
         if (table[i].id == key) {
             item.id = key;
@@ -118,6 +126,15 @@ void Table<T>::update(int key, T item) {
 template<typename T>
 void Table<T>::clear() {
     table.clear();
+}
+
+template<typename T>
+bool Table<T>::findByStr(const str &line) {
+    for (auto &e : table) {
+        if (e.toString() == line)
+            return true;
+    }
+    return false;
 }
 
 
