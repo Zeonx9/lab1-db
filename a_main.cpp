@@ -9,11 +9,16 @@ int main() {
     SetConsoleOutputCP(CP_UTF8);
     DataBase db;
     db.open("../data_test/");
+    db.printLine("students", 51, std::cout);
 
-    db.generate("testing_table", DataBase::Type::distribution);
-    db.print("testing_table", std::cout, true);
+    db.del("students");
+    db.del("testing_table");
 
-    db.print("students", std::cout);
+    db.printLine("students", 51, std::cout);
+    db.recover();
+    db.printLine("students", 51, std::cout);
+
+//    db.print("students", std::cout);
     db.close();
 }
 #endif
