@@ -6,7 +6,7 @@
 
 // insertion operators
 ost &operator<<(ost &os, const Student &s) {
-    os << s.id << " " << s.name << " " << s.surname << " " << s.patronymic;
+    os << s.id << " " << s.surname << " " << s.name << " " << s.patronymic;
     return os;
 }
 
@@ -28,12 +28,20 @@ Student::Student(const str &s, bool withId) {
     ss >> surname >> name >> patronymic;
 }
 
+str Student::toString() const {
+    return surname + name + patronymic;
+}
+
 Variant::Variant(const str&s, bool withId) {
     id = -1;
     sst ss(s);
     if (withId)
         ss >> id;
     ss >> path;
+}
+
+str Variant::toString() const {
+    return path;
 }
 
 Distribution::Distribution(const str&s, bool withId) {
@@ -45,4 +53,8 @@ Distribution::Distribution(const str&s, bool withId) {
 Distribution::Distribution(int studId, int varId) {
     id = studId;
     var = varId;
+}
+
+str Distribution::toString() const {
+    return std::to_string(id) + std::to_string(var);
 }
