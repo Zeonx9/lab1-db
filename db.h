@@ -13,6 +13,7 @@ public:
     enum class Type{student, variant, distribution};
 private:
     const str db_saved_data = "this_file_contain_information_about_db_state.txt";
+    const str back_up_folder = "backup/";
     str root = "../data/";
     bool modified = false;
     std::vector<std::pair<str, Type>> names;
@@ -27,7 +28,7 @@ public:
 
     void create(const str &rootFolder);
     void open(const str &rootFolder);
-    void close();
+    void close(const str &forder="");
 
     void generate(const str &name, Type type, const str &src="");
     void regenerate(const str &name, Type type, const str &src="");
@@ -40,6 +41,9 @@ public:
     void remove(const str &table, int key);
     void update(const str &table, int key, const str &line);
     void printLine(const str &table, int key, ost& os, bool toRead=false);
+
+    void backUp();
+    void recover();
 };
 
 #endif //DATABASELABSE_DB_H

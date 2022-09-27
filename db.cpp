@@ -54,14 +54,14 @@ void DataBase::open(const str &rootFolder) {
     file.close();
 }
 
-void DataBase::close() {
-    ofst file(root + db_saved_data);
+void DataBase::close(const str &folder) {
+    ofst file((folder.empty() ? root : folder) + db_saved_data);
 
     // write number of tables
     file << names.size() << " " << modified << "\n";
     for (auto &p: names){
         file << p.first << " " << (int) p.second << "\n";
-        auto path = root + p.first + ".txt";
+        auto path = (folder.empty() ? root : folder) + p.first + ".txt";
 
         // save all opened tables
         switch (p.second) {
@@ -115,7 +115,7 @@ void DataBase::generate(const str &name, DataBase::Type type, const str &src) {
     }
 }
 
-void DataBase::regenerate(const str &name, Type type, const str &src="") {
+void DataBase::regenerate(const str &name, Type type, const str &src) {
     del(name);
     generate(name, type, src);
 }
@@ -137,7 +137,7 @@ void DataBase::distribute() {
 void DataBase::del(const str &table) {
     auto ind = find(table);
     if (ind == -1) {
-        std::cerr << "No such table to delete";
+        std::cerr << "No such table \"" << table << "\" to delete\n";
         return;
     }
 
@@ -159,14 +159,14 @@ void DataBase::del(const str &table) {
 
 void DataBase::distToReadStr(const Distribution &d, ost &os) {
     auto &s = studs[d.id];
-    os << s.surname <<  " " + s.name << " " << s.patronymic << "\t\t" <<  vars[d.var].path << "\n";
+    os << s.surname <<  " " + s.name << " " << s.patronymic << "\t\t" <<  vars[d.var].path;
 }
 
 
 void DataBase::print(const str &name, ost &os, bool toRead)  {
     auto ind = find(name);
     if (ind == -1) {
-        std::cerr << "No such table: \"" << name << "\"\n";
+        std::cerr << "No such table: \"" << name << "\" to print\n";
         return;
     }
 
@@ -178,6 +178,7 @@ void DataBase::print(const str &name, ost &os, bool toRead)  {
         }
         for (auto &row : dstr.getTable()) {
             distToReadStr(row, os);
+            os << "\n";
         }
         return;
     }
@@ -260,7 +261,7 @@ void DataBase::update(const str &table, int key, const str &line) {
 void DataBase::printLine(const str &table, int key, ost& os, bool toRead) {
     auto ind = find(table);
     if (ind == -1) {
-        std::cerr << "update() failed, table not found\n";
+        std::cerr << "printLine() failed, table not found\n";
         return;
     }
     bool notFound;
@@ -271,7 +272,7 @@ void DataBase::printLine(const str &table, int key, ost& os, bool toRead) {
                 std::cerr << "key not found\n";
                 return;
             }
-                os << s;
+                os << s << "\n";
             break;
         } case Type::variant: {
             auto &v = vars.find(key, notFound);
@@ -279,7 +280,7 @@ void DataBase::printLine(const str &table, int key, ost& os, bool toRead) {
                 std::cerr << "key not found\n";
                 return;
             }
-            os << v;
+            os << v << "\n";
             break;
         } case Type::distribution: {
             auto &d = dstr.find(key, notFound);
@@ -293,11 +294,27 @@ void DataBase::printLine(const str &table, int key, ost& os, bool toRead) {
                     return;
                 }
                 distToReadStr(d, os);
+                os << "\n";
             }
             else
-                os << d;
+                os << d << "\n";
         }
     }
+}
+
+void DataBase::backUp() {
+    auto folder = root + back_up_folder;
+    std::filesystem::create_directories(folder);
+    close(folder);
+}
+
+void DataBase::recover() {
+    auto prevRoot = root;
+    for (auto &p : names) {
+        del(p.first);
+    }
+    open(root + back_up_folder);
+    root = prevRoot;
 }
 
 
