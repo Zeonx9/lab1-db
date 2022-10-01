@@ -4,7 +4,6 @@
 
 #include <iostream>
 #include <fstream>
-#include <random>
 #include <filesystem>
 #include "db.h"
 
@@ -18,20 +17,29 @@ int DataBase::find(const str &name) {
 }
 
 void DataBase::create(const str &rootFolder) {
-    root = rootFolder;
-    std::filesystem::create_directories(root);
-}
-
-void DataBase::open(const str &rootFolder) {
-    root = rootFolder;
-
-    ifst file(root + db_saved_data);
-    if (!file){
-        std::cout << "DB not found\n";
+    try {
+        std::filesystem::create_directories(rootFolder);
+    } catch(int err) {
+        std::cerr << "cannot create database: " << err << "\n";
         return;
     }
-    int n;
-    file >> n >> modified;
+    root = rootFolder;
+    opened = true;
+}
+
+void DataBase::open(const str &rootFolder, bool bu) {
+    auto rf = rootFolder;
+    std::replace(rf.begin(), rf.end(), '\\', '/');
+    ifst file(rf + db_saved_data);
+    if (!file){
+        std::cerr << "database not found\n";
+        return;
+    }
+    root = rf;
+    int n, tmp;
+    file >> n >> modified >> (bu ? tmp : backUpNumber);
+    if (n > 3)
+        n = 3;
 
     for (int i = 0; i < n; ++i) {
         str s; int t;
@@ -52,13 +60,18 @@ void DataBase::open(const str &rootFolder) {
         }
     }
     file.close();
+    opened = true;
 }
 
 void DataBase::close(const str &folder) {
     ofst file((folder.empty() ? root : folder) + db_saved_data);
+    if (!file) {
+        std::cerr << "cannot save database\n";
+        return;
+    }
 
     // write number of tables
-    file << names.size() << " " << modified << "\n";
+    file << names.size() << " " << modified << " " << backUpNumber << "\n";
     for (auto &p: names){
         file << p.first << " " << (int) p.second << "\n";
         auto path = (folder.empty() ? root : folder) + p.first + ".txt";
@@ -77,6 +90,7 @@ void DataBase::close(const str &folder) {
     }
 
     file.close();
+    opened = false;
 }
 
 // creates a table and binds it to db object
@@ -115,26 +129,32 @@ void DataBase::generate(const str &name, DataBase::Type type, const str &src) {
     }
 }
 
-void DataBase::regenerate(const str &name, Type type, const str &src) {
+void DataBase::regenerate(const str &name, const str &src) {
+    auto ind = find(name);
+    if (ind == -1) {
+        std::cerr << "regenerate() failed, table not found\n";
+        return;
+    }
+    Type type = names[ind].second;
     del(name);
     generate(name, type, src);
 }
 
 void DataBase::distribute() {
-    // create a distribution engine
-    std::random_device rd;
-    std::mt19937 rng(rd());
-    std::uniform_int_distribution<std::mt19937::result_type> rnd(1, vars.size());
-
+    if (dstr.size() > 0) {
+        std::cerr << "has been distributed already\n";
+        return;
+    }
     // for each student give the variant randomly
     for (auto &stud: studs.getTable()) {
+        int r = rand() % vars.size();
         // std::cout << "student id:" << it->id << " var id:" << rv << "\n";
-        dstr.add(Distribution(stud.id, vars[rnd(rng)].id)); // without changing the id
+        dstr.add(Distribution(stud.id, vars[r].id)); // without changing the id
     }
     modified = false;
 }
 
-void DataBase::del(const str &table) {
+void DataBase:: del(const str &table) {
     auto ind = find(table);
     if (ind == -1) {
         std::cerr << "No such table \"" << table << "\" to delete\n";
@@ -153,15 +173,16 @@ void DataBase::del(const str &table) {
         case Type::distribution:
             dstr.clear();
     }
-
-    names.erase(names.begin() + ind);
+    auto it = names.begin();
+    for (int i = 0; i < ind; ++it, ++i);
+    names.erase(it);
 }
 
 void DataBase::distToReadStr(const Distribution &d, ost &os) {
     auto &s = studs[d.id];
-    os << s.surname <<  " " + s.name << " " << s.patronymic << "\t\t" <<  vars[d.var].path;
+    auto name = s.surname +  " " + s.name + " " + s.patronymic;
+    os << name << "\t\t" <<  vars[d.var].path;
 }
-
 
 void DataBase::print(const str &name, ost &os, bool toRead)  {
     auto ind = find(name);
@@ -303,18 +324,57 @@ void DataBase::printLine(const str &table, int key, ost& os, bool toRead) {
 }
 
 void DataBase::backUp() {
-    auto folder = root + back_up_folder;
+    auto prevRoot = root;
+    // save the state to current dir;
+    close();
+    open(prevRoot);
+
+    // save backup
+    auto folder = root + back_up_folder + std::to_string(backUpNumber) + "/";
     std::filesystem::create_directories(folder);
     close(folder);
+    clear();
+    // reopen files;
+    open(prevRoot);
+    ++backUpNumber;
 }
 
-void DataBase::recover() {
-    auto prevRoot = root;
-    for (auto &p : names) {
-        del(p.first);
+void DataBase::recover(int i) {
+    if (i < 0)
+        i = backUpNumber - 1;
+    if (i < 0) {
+        std::cerr << "No availivble backUps\n";
+        return;
     }
-    open(root + back_up_folder);
+
+    auto prevRoot = root;
+    int bn = backUpNumber;
+    //  delete everyting;
+    for (auto &p : names) {
+        std::filesystem::remove(root + p.first + ".txt");
+    }
+    clear();
+
+    open(root + back_up_folder + std::to_string(i) + "/", true);
+    backUpNumber = bn;
     root = prevRoot;
+}
+
+bool DataBase::isOpened() const{
+    return opened;
+}
+
+void DataBase::listTables() {
+    for (auto &p : names) {
+        std::cout << p.first << "\t" << (int) p.second << "\n";
+    }
+}
+
+void DataBase::clear() {
+    studs.clear();
+    vars.clear();
+    dstr.clear();
+    names.clear();
 }
 
 
